@@ -36,7 +36,7 @@ class Record:
         if not phone_to_edit:
             raise ValueError("Old phone not found")
         self.add_phone(new_number)
-        self.remove_phone(phone_to_edit)
+        self.remove_phone(old_number)
 
     def find_phone(self, phone_number):
          for phone in self.phones:
@@ -99,7 +99,7 @@ book = AddressBook()
 class Birthday(Field):
     def __init__(self, value):
         try:
-            self.value = datetime.strptime(value, "%d.%m.%Y")
+            self.value = datetime.strptime("", "%d.%m.%Y")
         except ValueError:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
 
@@ -173,8 +173,26 @@ def show_birthday(args, book):
 @input_error
 def birthdays(args, book):
     upcoming_birthdays = []
-    today = datetime.today()
+    today = datetime.today().date()
+
+    for record in book.data.values():
+        if record.birthday is not None:
+            birthday_this_year = record.birthday.value.replace(year=today.year)
+
+            if birthday_this_year < today:
+                birthday_this_year = birthday_this_year.replace(year=today.year + 1)
+
+            if 0 <= (birthday_this_year - today).days <= 7:
+                upcoming_birthdays.append({
+                    "name": record.name.value,
+                    "birthday": birthday_this_year.strftime("%d.%m.%Y")
+                })
+
+    if not upcoming_birthdays:
+        return "No upcoming birthdays."
+
     return upcoming_birthdays
+
 
 def show_all(contacts):
     return "\n".join(f"{name}: {phone}" for name, phone in contacts.items())
