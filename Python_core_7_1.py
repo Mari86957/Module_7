@@ -79,27 +79,31 @@ class AddressBook(UserDict):
     def get_upcoming_birthdays(self, days=7):
         upcoming_birthdays = []
         today = date.today()
-            
+        
         for record in self.data.values():
             if record.birthday:
-                birthday_this_year = record.birthday.value.replace(year=today.year)
+                birthday_date = datetime.strptime(record.birthday.value, "%d.%m.%Y").date()
+                birthday_this_year = birthday_date.replace(year=today.year)
                 
                 if birthday_this_year < today:
-                    birthday_this_year = birthday_this_year.replace(year=today.year + 1)
-
-                birthday_this_year = self.adjust_for_weekend(birthday_this_year)
-
+                    birthday_this_year = birthday_date.replace(year=today.year + 1)
+                
                 if 0 <= (birthday_this_year - today).days <= days:
-                    congratulation_date_str = birthday_this_year.strftime("%d.%m.%Y")
-                    upcoming_birthdays.append({"name": record.name.value, "congratulation_date": congratulation_date_str})
-        return upcoming_birthdays
+                    upcoming_birthdays.append({
+                        "name": record.name.value,
+                        "congratulation_date": record.birthday.value  
+                    })
+        
+        return upcoming_birthdays if upcoming_birthdays else "No upcoming birthdays."
+
 
 book = AddressBook()
 
 class Birthday(Field):
     def __init__(self, value):
         try:
-            self.value = datetime.strptime("", "%d.%m.%Y")
+            datetime.strptime(value, "%d.%m.%Y")
+            self.value = value
         except ValueError:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
 
