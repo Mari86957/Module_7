@@ -78,6 +78,9 @@ class AddressBook(UserDict):
                     birthday_this_year = birthday_date.replace(year=today.year + 1)
 
                 if 0 <= (birthday_this_year - today).days <= days:
+                    congratulation_date = birthday_this_year
+                    adjusted_date = self.adjust_for_weekend(congratulation_date)
+                    
                     upcoming_birthdays.append({
                         "name": record.name.value,
                         "congratulation_date": record.birthday.value  
