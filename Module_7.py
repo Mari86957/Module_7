@@ -69,6 +69,7 @@ class AddressBook(UserDict):
     def get_upcoming_birthdays(self, days=7):
         upcoming_birthdays = []
         today = date.today()
+        
         for record in self.data.values():
             if record.birthday:
                 birthday_date = datetime.strptime(record.birthday.value, "%d.%m.%Y").date()
@@ -83,10 +84,30 @@ class AddressBook(UserDict):
                     
                     upcoming_birthdays.append({
                         "name": record.name.value,
-                        "congratulation_date": record.birthday.value  
+                        "congratulation_date": adjusted_date.strftime("%d.%m.%Y") 
                     })
 
         return upcoming_birthdays if upcoming_birthdays else "No upcoming birthdays."
+
+
+
+
+def parse_input(user_input):
+    cmd, *args = user_input.split()
+    cmd = cmd.strip().lower()
+    return cmd, *args
+
+def input_error(add_contact):
+    def inner(*args, **kwargs):
+        try:
+            return add_contact(*args, **kwargs)
+        except ValueError:
+            return "Give me name and phone please."
+        except KeyError:
+            return "This contact does not exist."
+        except IndexError:
+            return "Enter user name."
+    return inner
 
 
 book = AddressBook()
@@ -100,21 +121,6 @@ class Birthday(Field):
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
 
        
-def parse_input(user_input):
-    cmd, *args = user_input.split()
-    cmd = cmd.strip().lower()
-    return cmd, *args
-def input_error(add_contact):
-    def inner(*args, **kwargs):
-        try:
-            return add_contact(*args, **kwargs)
-        except ValueError:
-            return "Give me name and phone please."
-        except KeyError:
-            return "This contact does not exist."
-        except IndexError:
-            return "Enter user name."
-    return inner
 
 @input_error
 def add_contact(args, book: AddressBook):
@@ -143,8 +149,9 @@ def phone_username(args, book: AddressBook):
     name, *_ = args
     record = book.find(name)
     if record is None:
-        raise KeyError      
-    return  f"{name}: {phone_username}."
+        raise KeyError
+    phones = ', '.join(phone.value for phone in record.phones)
+    return f"{name}: {phones}."
 
 @input_error
 def add_birthday(args, book):
